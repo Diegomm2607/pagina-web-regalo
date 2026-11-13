@@ -257,7 +257,29 @@ function playMusic(){
 document.getElementById("editTitle").value=data.title;
 document.getElementById("editSubtitle").value=data.subtitle;
 loadEditor();
-render();
+render();const backupButton = document.createElement("button");
+backupButton.textContent = "Descargar respaldo de mis recuerdos ❤️";
+backupButton.style.display = "block";
+backupButton.style.margin = "20px auto";
+
+backupButton.onclick = () => {
+  const saved = localStorage.getItem("regalo_web_v1");
+  if (!saved) {
+    alert("No encontramos los recuerdos guardados.");
+    return;
+  }
+
+  const blob = new Blob([saved], {type: "application/json"});
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "respaldo-regina.json";
+  link.click();
+  URL.revokeObjectURL(url);
+  alert("¡Respaldo descargado! ❤️");
+};
+
+document.getElementById("admin").appendChild(backupButton);
 </script>
 </body>
 </html>
