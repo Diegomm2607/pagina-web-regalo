@@ -1,0 +1,263 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Un lugar para nosotros ❤️</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Georgia,serif;background:#fff8f7;color:#543d46}
+header{min-height:85vh;padding:35px 20px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;background:linear-gradient(#f7dce4aa,#fff1edcc),url('') center/cover}
+h1{font-size:clamp(38px,9vw,65px);font-weight:normal;font-style:italic;margin:15px}
+p{line-height:1.7}
+button{border:0;border-radius:25px;padding:13px 22px;background:#c77f9b;color:white;font-size:15px;cursor:pointer}
+button:active{transform:scale(.97)}
+.secondary{background:#ead3dc;color:#684554}
+section{padding:35px 18px;max-width:850px;margin:auto}
+h2{text-align:center;font-weight:normal;font-style:italic;font-size:30px}
+.card{background:white;border:1px solid #f0dce3;border-radius:18px;padding:20px;margin:14px 0;box-shadow:0 4px 15px #81556a12}
+input,textarea,select{width:100%;padding:12px;border:1px solid #e5cbd5;border-radius:10px;margin:7px 0 14px;font:15px Arial;background:#fff}
+textarea{min-height:150px;resize:vertical}
+label{font:14px Arial;color:#805b6b}
+img{max-width:100%;border-radius:14px}
+.hidden{display:none!important}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.day{background:white;border:1px solid #efd9e1;border-radius:14px;padding:16px 8px;text-align:center;cursor:pointer}
+.day strong{display:block;margin:7px}
+.day small{color:#9a7483}
+.progress{height:13px;background:#f0dce3;border-radius:20px;overflow:hidden}
+.bar{height:100%;width:0;background:#c77f9b;transition:width .2s}
+.big{font-size:42px;color:#bd7894;text-align:center;margin:15px}
+.center{text-align:center}
+footer{text-align:center;padding:30px;color:#a17b89}
+#admin{background:#fff0f3}
+#coverPreview,#letterPreview{max-height:260px;object-fit:cover;width:100%}
+@media(min-width:650px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+</style>
+</head>
+<body>
+
+<header id="home">
+  <p>♡ Un espacio creado especialmente para ti ♡</p>
+  <h1 id="mainTitle">Un lugar para nosotros</h1>
+  <p id="subtitle">Aquí guardo recuerdos, palabras y momentos especiales.</p>
+  <img id="coverPreview" class="hidden" alt="Nuestra fotografía">
+  <div style="margin:18px">
+    <button onclick="playMusic()">♫ Escuchar nuestra canción</button>
+    <audio id="music" controls class="hidden" style="display:block;margin-top:12px"></audio>
+  </div>
+  <button onclick="document.getElementById('letters').scrollIntoView({behavior:'smooth'})">Entrar a nuestros recuerdos ↓</button>
+</header>
+
+<section id="letters">
+  <h2>Cartas para ti ♡</h2>
+  <p class="center">Cada día tengo algo nuevo que decirte.</p>
+  <div class="grid" id="letterGrid"></div>
+</section>
+
+<section id="readLetter" class="hidden">
+  <div class="card">
+    <button class="secondary" onclick="closeLetter()">← Volver</button>
+    <h2 id="readTitle">Día 1</h2>
+    <img id="readPhoto" class="hidden" alt="Fotografía de la carta">
+    <p id="readText"></p>
+  </div>
+</section>
+
+<section id="points">
+  <div class="card">
+    <h2>Los 100 puntos ❤️</h2>
+    <p class="center">Hay una pregunta que quiero hacerte...</p>
+    <div class="big"><span id="score">0</span> / 100</div>
+    <div class="progress"><div class="bar" id="bar"></div></div>
+    <p class="center">Cada punto nos acerca un poquito más.</p>
+    <div class="center">
+      <button id="pointButton" onclick="addPoint()">♡ Pulsa para dar un punto ♡</button>
+    </div>
+    <div id="finish" class="hidden center">
+      <h2>¡Llegamos a 100! ❤️</h2>
+      <h1>Volvemos.</h1>
+      <p>100 puntos. Una nueva oportunidad. Una nueva historia.</p>
+    </div>
+  </div>
+</section>
+
+<section id="admin">
+  <h2>Tu espacio de administrador ⚙️</h2>
+  <p class="center">Panel de edición de la página.</p>
+  <div class="card">
+    <h3>Editar portada</h3>
+    <label>Título</label>
+    <input id="editTitle" placeholder="Un lugar para nosotros">
+    <label>Dedicatoria</label>
+    <textarea id="editSubtitle" placeholder="Escribe una dedicatoria..."></textarea>
+    <label>Fotografía de portada</label>
+    <input type="file" id="coverFile" accept="image/*">
+    <label>Canción (archivo de audio)</label>
+    <input type="file" id="musicFile" accept="audio/*">
+    <button onclick="saveCover()">Guardar portada</button>
+  </div>
+  <div class="card">
+    <h3>Editar una carta</h3>
+    <label>Selecciona el día</label>
+    <select id="daySelect"></select>
+    <label>Título de la carta</label>
+    <input id="editLetterTitle" placeholder="Un título especial">
+    <label>Tu mensaje</label>
+    <textarea id="editLetterText" placeholder="Escribe aquí tu carta..."></textarea>
+    <label>Fotografía de la carta</label>
+    <input type="file" id="letterFile" accept="image/*">
+    <button onclick="saveLetter()">Guardar carta</button>
+    <p id="savedMessage"></p>
+  </div>
+</section>
+
+<footer>Hecho con cariño ♡</footer>
+
+<script>
+const KEY="regalo_web_v1";
+const defaults=()=>({
+ title:"Un lugar para nosotros",
+ subtitle:"Aquí guardo recuerdos, palabras y momentos especiales.",
+ cover:"",
+ music:"",
+ letters:Array.from({length:30},(_,i)=>({
+   title:"Carta del día "+(i+1),text:"",photo:""
+ })),
+ points:0,finished:false
+});
+
+let data;
+try{
+ data=JSON.parse(localStorage.getItem(KEY))||defaults();
+}catch(e){data=defaults()}
+
+function persist(){
+ try{
+  localStorage.setItem(KEY,JSON.stringify(data));
+ }catch(e){
+  alert("El almacenamiento está lleno. Prueba con una fotografía más pequeña.");
+ }
+}
+
+function render(){
+ document.getElementById("mainTitle").textContent=data.title;
+ document.getElementById("subtitle").textContent=data.subtitle;
+ const cover=document.getElementById("coverPreview");
+ if(data.cover){cover.src=data.cover;cover.classList.remove("hidden")}
+ else cover.classList.add("hidden");
+ const music=document.getElementById("music");
+ if(data.music){music.src=data.music;music.classList.remove("hidden")}
+ renderGrid();
+ updatePoints();
+}
+
+function renderGrid(){
+ const grid=document.getElementById("letterGrid");
+ grid.innerHTML="";
+ data.letters.forEach((letter,i)=>{
+  const div=document.createElement("div");
+  div.className="day";
+  div.innerHTML=`♡<strong>Día ${i+1}</strong><small>${letter.text?"Carta preparada":"Próximamente"}</small>`;
+  div.onclick=()=>openLetter(i);
+  grid.appendChild(div);
+ });
+}
+
+function openLetter(i){
+ const l=data.letters[i];
+ document.getElementById("readTitle").textContent=l.title||"Día "+(i+1);
+ document.getElementById("readText").textContent=l.text||"Esta carta todavía no está lista. ♡";
+ const photo=document.getElementById("readPhoto");
+ if(l.photo){photo.src=l.photo;photo.classList.remove("hidden")}
+ else photo.classList.add("hidden");
+ document.getElementById("letters").classList.add("hidden");
+ document.getElementById("readLetter").classList.remove("hidden");
+ document.getElementById("readLetter").scrollIntoView();
+}
+
+function closeLetter(){
+ document.getElementById("readLetter").classList.add("hidden");
+ document.getElementById("letters").classList.remove("hidden");
+ document.getElementById("letters").scrollIntoView();
+}
+
+function readFile(file,callback){
+ if(!file)return;
+ const reader=new FileReader();
+ reader.onload=()=>callback(reader.result);
+ reader.readAsDataURL(file);
+}
+
+function saveCover(){
+ data.title=document.getElementById("editTitle").value||data.title;
+ data.subtitle=document.getElementById("editSubtitle").value||data.subtitle;
+ const photo=document.getElementById("coverFile").files[0];
+ const audio=document.getElementById("musicFile").files[0];
+ let jobs=[];
+ if(photo)jobs.push(new Promise(resolve=>readFile(photo,v=>{data.cover=v;resolve()})));
+ if(audio)jobs.push(new Promise(resolve=>readFile(audio,v=>{data.music=v;resolve()})));
+ Promise.all(jobs).then(()=>{
+  persist();render();alert("Portada guardada ♡");
+ });
+}
+
+function saveLetter(){
+ const i=Number(document.getElementById("daySelect").value);
+ const l=data.letters[i];
+ l.title=document.getElementById("editLetterTitle").value||"Carta del día "+(i+1);
+ l.text=document.getElementById("editLetterText").value;
+ const photo=document.getElementById("letterFile").files[0];
+ if(photo){
+  readFile(photo,v=>{
+   l.photo=v;persist();render();
+   document.getElementById("savedMessage").textContent="¡Carta y fotografía guardadas! ♡";
+  });
+ }else{
+  persist();render();
+  document.getElementById("savedMessage").textContent="¡Carta guardada! ♡";
+ }
+}
+
+function loadEditor(){
+ const i=Number(document.getElementById("daySelect").value);
+ const l=data.letters[i];
+ document.getElementById("editLetterTitle").value=l.title;
+ document.getElementById("editLetterText").value=l.text;
+ document.getElementById("letterFile").value="";
+}
+document.getElementById("daySelect").innerHTML=
+ data.letters.map((l,i)=>`<option value="${i}">Día ${i+1}</option>`).join("");
+document.getElementById("daySelect").addEventListener("change",loadEditor);
+
+function addPoint(){
+ if(data.finished||data.points>=100)return;
+ data.points++;
+ if(data.points===100)data.finished=true;
+ persist();updatePoints();
+}
+
+function updatePoints(){
+ document.getElementById("score").textContent=data.points;
+ document.getElementById("bar").style.width=data.points+"%";
+ if(data.finished){
+  document.getElementById("finish").classList.remove("hidden");
+  document.getElementById("pointButton").classList.add("hidden");
+ }
+}
+
+function playMusic(){
+ const music=document.getElementById("music");
+ if(!music.src){alert("Todavía no hay una canción configurada ♡");return}
+ music.classList.remove("hidden");
+ music.play();
+}
+
+document.getElementById("editTitle").value=data.title;
+document.getElementById("editSubtitle").value=data.subtitle;
+loadEditor();
+render();
+</script>
+</body>
+</html>
