@@ -3,22 +3,23 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Un lugar para nosotros ❤️</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box}
 body{margin:0;font-family:Georgia,serif;background:#fff8f7;color:#543d46}
-header{min-height:85vh;padding:35px 20px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;background:linear-gradient(#f7dce4aa,#fff1edcc),url('') center/cover}
+header{min-height:85vh;padding:35px 20px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;background:linear-gradient(#f7dce4aa,#fff1edcc)}
 h1{font-size:clamp(38px,9vw,65px);font-weight:normal;font-style:italic;margin:15px}
 p{line-height:1.7}
-button{border:0;border-radius:25px;padding:13px 22px;background:#c77f9b;color:white;font-size:15px;cursor:pointer}
-button:active{transform:scale(.97)}
+button{border:0;border-radius:25px;padding:13px 22px;background:#c77f9b;color:white;font-size:15px;cursor:pointer;margin:5px}
+button:disabled{opacity:.5}
 .secondary{background:#ead3dc;color:#684554}
 section{padding:35px 18px;max-width:850px;margin:auto}
 h2{text-align:center;font-weight:normal;font-style:italic;font-size:30px}
 .card{background:white;border:1px solid #f0dce3;border-radius:18px;padding:20px;margin:14px 0;box-shadow:0 4px 15px #81556a12}
 input,textarea,select{width:100%;padding:12px;border:1px solid #e5cbd5;border-radius:10px;margin:7px 0 14px;font:15px Arial;background:#fff}
-textarea{min-height:150px;resize:vertical}
+textarea{min-height:150px}
 label{font:14px Arial;color:#805b6b}
 img{max-width:100%;border-radius:14px}
 .hidden{display:none!important}
@@ -32,254 +33,572 @@ img{max-width:100%;border-radius:14px}
 .center{text-align:center}
 footer{text-align:center;padding:30px;color:#a17b89}
 #admin{background:#fff0f3}
-#coverPreview,#letterPreview{max-height:260px;object-fit:cover;width:100%}
+#coverPreview,#readPhoto{max-height:260px;object-fit:cover;width:100%}
+.status{font:14px Arial;text-align:center;overflow-wrap:anywhere}
 @media(min-width:650px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 </style>
 </head>
 <body>
 
-<header id="home">
-  <p>♡ Un espacio creado especialmente para ti ♡</p>
-  <h1 id="mainTitle">Un lugar para nosotros</h1>
-  <p id="subtitle">Aquí guardo recuerdos, palabras y momentos especiales.</p>
-  <img id="coverPreview" class="hidden" alt="Nuestra fotografía">
-  <div style="margin:18px">
-    <button onclick="playMusic()">♫ Escuchar nuestra canción</button>
-    <audio id="music" controls class="hidden" style="display:block;margin-top:12px"></audio>
-  </div>
-  <button onclick="document.getElementById('letters').scrollIntoView({behavior:'smooth'})">Entrar a nuestros recuerdos ↓</button>
+<header>
+<p>♡ Un espacio creado especialmente para ti ♡</p>
+<h1 id="mainTitle">Un lugar para nosotros</h1>
+<p id="subtitle">Aquí guardo recuerdos, palabras y momentos especiales.</p>
+<img id="coverPreview" class="hidden" alt="Nuestra fotografía">
+<div style="margin:18px">
+<button onclick="playMusic()">♫ Escuchar nuestra canción</button>
+<audio id="music" controls class="hidden" style="display:block;margin-top:12px;max-width:100%"></audio>
+</div>
+<button onclick="document.getElementById('letters').scrollIntoView({behavior:'smooth'})">Entrar a nuestros recuerdos ↓</button>
 </header>
 
 <section id="letters">
-  <h2>Cartas para ti ♡</h2>
-  <p class="center">Cada día tengo algo nuevo que decirte.</p>
-  <div class="grid" id="letterGrid"></div>
+<h2>Cartas para ti ♡</h2>
+<p class="center">Cada día tengo algo nuevo que decirte.</p>
+<div class="grid" id="letterGrid"></div>
 </section>
 
 <section id="readLetter" class="hidden">
-  <div class="card">
-    <button class="secondary" onclick="closeLetter()">← Volver</button>
-    <h2 id="readTitle">Día 1</h2>
-    <img id="readPhoto" class="hidden" alt="Fotografía de la carta">
-    <p id="readText"></p>
-  </div>
+<div class="card">
+<button class="secondary" onclick="closeLetter()">← Volver</button>
+<h2 id="readTitle"></h2>
+<img id="readPhoto" class="hidden" alt="Fotografía de la carta">
+<p id="readText"></p>
+</div>
 </section>
 
 <section id="points">
-  <div class="card">
-    <h2>Los 100 puntos ❤️</h2>
-    <p class="center">Hay una pregunta que quiero hacerte...</p>
-    <div class="big"><span id="score">0</span> / 100</div>
-    <div class="progress"><div class="bar" id="bar"></div></div>
-    <p class="center">Cada punto nos acerca un poquito más.</p>
-    <div class="center">
-      <button id="pointButton" onclick="addPoint()">♡ Pulsa para dar un punto ♡</button>
-    </div>
-    <div id="finish" class="hidden center">
-      <h2>¡Llegamos a 100! ❤️</h2>
-      <h1>Volvemos.</h1>
-      <p>100 puntos. Una nueva oportunidad. Una nueva historia.</p>
-    </div>
-  </div>
+<div class="card">
+<h2>Los 100 puntos ❤️</h2>
+<p class="center">Hay una pregunta que quiero hacerte...</p>
+<div class="big"><span id="score">0</span> / 100</div>
+<div class="progress"><div class="bar" id="bar"></div></div>
+<p class="center">Cada punto nos acerca un poquito más.</p>
+<div class="center">
+<button id="pointButton" onclick="addPoint()">♡ Pulsa para dar un punto ♡</button>
+</div>
+<div id="finish" class="hidden center">
+<h2>¡Llegamos a 100! ❤️</h2>
+<h1>Volvemos.</h1>
+<p>100 puntos. Una nueva oportunidad. Una nueva historia.</p>
+</div>
+</div>
 </section>
 
-<section id="admin">
-  <h2>Tu espacio de administrador ⚙️</h2>
-  <p class="center">Panel de edición de la página.</p>
-  <div class="card">
-    <h3>Editar portada</h3>
-    <label>Título</label>
-    <input id="editTitle" placeholder="Un lugar para nosotros">
-    <label>Dedicatoria</label>
-    <textarea id="editSubtitle" placeholder="Escribe una dedicatoria..."></textarea>
-    <label>Fotografía de portada</label>
-    <input type="file" id="coverFile" accept="image/*">
-    <label>Canción (archivo de audio)</label>
-    <input type="file" id="musicFile" accept="audio/*">
-    <button onclick="saveCover()">Guardar portada</button>
-  </div>
-  <div class="card">
-    <h3>Editar una carta</h3>
-    <label>Selecciona el día</label>
-    <select id="daySelect"></select>
-    <label>Título de la carta</label>
-    <input id="editLetterTitle" placeholder="Un título especial">
-    <label>Tu mensaje</label>
-    <textarea id="editLetterText" placeholder="Escribe aquí tu carta..."></textarea>
-    <label>Fotografía de la carta</label>
-    <input type="file" id="letterFile" accept="image/*">
-    <button onclick="saveLetter()">Guardar carta</button>
-    <p id="savedMessage"></p>
-  </div>
+<section id="login" class="hidden">
+<div class="card">
+<h2>Acceso privado ⚙️</h2>
+<p>Inicia sesión para administrar esta página.</p>
+<label>Correo electrónico</label>
+<input id="email" type="email" autocomplete="username">
+<label>Contraseña</label>
+<input id="password" type="password" autocomplete="current-password">
+<button onclick="loginAdmin()">Iniciar sesión</button>
+<button class="secondary" onclick="hideLogin()">Cancelar</button>
+<p id="loginMessage" class="status"></p>
+</div>
 </section>
 
-<footer>Hecho con cariño ♡</footer>
+<section id="admin" class="hidden">
+<h2>Tu espacio de administrador ⚙️</h2>
+<p class="center">Este panel solo aparece al iniciar sesión como administrador.</p>
+
+<div class="card">
+<h3>Importar tus recuerdos</h3>
+<p>Selecciona el archivo de respaldo que descargaste en tu iPad.</p>
+<input type="file" id="backupFile" accept=".json,application/json">
+<button onclick="importBackup()">Importar respaldo ❤️</button>
+<p id="importMessage" class="status"></p>
+</div>
+
+<div class="card">
+<h3>Editar portada</h3>
+<label>Título</label>
+<input id="editTitle">
+<label>Dedicatoria</label>
+<textarea id="editSubtitle"></textarea>
+<label>Fotografía de portada</label>
+<input type="file" id="coverFile" accept="image/*">
+<label>Canción</label>
+<input type="file" id="musicFile" accept="audio/*">
+<button onclick="saveCover()">Guardar portada</button>
+<p id="coverMessage" class="status"></p>
+</div>
+
+<div class="card">
+<h3>Editar una carta</h3>
+<label>Selecciona el día</label>
+<select id="daySelect"></select>
+<label>Título</label>
+<input id="editLetterTitle">
+<label>Mensaje</label>
+<textarea id="editLetterText"></textarea>
+<label>Fotografía</label>
+<input type="file" id="letterFile" accept="image/*">
+<label>Fecha y hora para desbloquear (opcional)</label>
+<input type="datetime-local" id="unlockDate">
+<button onclick="saveLetter()">Guardar carta</button>
+<p id="savedMessage" class="status"></p>
+</div>
+<button class="secondary" onclick="logoutAdmin()">Cerrar sesión</button>
+</section>
+
+<footer>
+Hecho con cariño ♡
+<br>
+<button class="secondary" onclick="showLogin()">Acceso administrador</button>
+</footer>
 
 <script>
-const KEY="regalo_web_v1";
-const defaults=()=>({
- title:"Un lugar para nosotros",
- subtitle:"Aquí guardo recuerdos, palabras y momentos especiales.",
- cover:"",
- music:"",
- letters:Array.from({length:30},(_,i)=>({
-   title:"Carta del día "+(i+1),text:"",photo:""
- })),
- points:0,finished:false
-});
+const SUPABASE_URL="https://rbhivzpuhbtsjmyrblih.supabase.co";
+const SUPABASE_KEY="sb_publishable_T9ywz3m_4D83yb66LnGjDg_4zNEOG_F";
+const ADMIN_UID="4f4eae70-0657-428a-bd1f-bcf15ccb7431";
+const BUCKET="regalo-media";
 
-let data;
-try{
- data=JSON.parse(localStorage.getItem(KEY))||defaults();
-}catch(e){data=defaults()}
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
-function persist(){
+let isAdmin=false;
+let letters=Array.from({length:30},(_,i)=>({
+ numero:i+1,
+ titulo:"Carta del día "+(i+1),
+ contenido:"",
+ foto_url:"",
+ fecha_desbloqueo:"9999-12-31T00:00:00Z"
+}));
+let cover={
+ titulo:"Un lugar para nosotros",
+ dedicatoria:"Aquí guardo recuerdos, palabras y momentos especiales.",
+ foto_url:"",
+ musica_url:""
+};
+let points=0;
+
+const el=id=>document.getElementById(id);
+const show=id=>el(id).classList.remove("hidden");
+const hide=id=>el(id).classList.add("hidden");
+
+function message(id,text){el(id).textContent=text}
+
+function localDateValue(value){
+ if(!value)return "";
+ const d=new Date(value);
+ if(isNaN(d))return "";
+ const pad=n=>String(n).padStart(2,"0");
+ return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())+"T"+pad(d.getHours())+":"+pad(d.getMinutes());
+}
+
+async function loadData(){
  try{
-  localStorage.setItem(KEY,JSON.stringify(data));
+  const {data:c,error:ce}=await db.from("portada").select("*").eq("id",1).maybeSingle();
+  if(ce)throw ce;
+  if(c)cover={...cover,...c};
+
+  const {data:l,error:le}=await db.from("cartas").select("*").order("numero");
+  if(le)throw le;
+  if(l){
+   l.forEach(item=>{
+    const index=Number(item.numero)-1;
+    if(index>=0&&index<30)letters[index]=item;
+   });
+  }
+
+  const {data:p,error:pe}=await db.from("puntos").select("total").eq("id",1).maybeSingle();
+  if(pe)throw pe;
+  if(p)points=Number(p.total)||0;
+
+  render();
  }catch(e){
-  alert("El almacenamiento está lleno. Prueba con una fotografía más pequeña.");
+  console.error(e);
+  alert("No pudimos cargar los datos. Revisa tu conexión.");
  }
 }
 
 function render(){
- document.getElementById("mainTitle").textContent=data.title;
- document.getElementById("subtitle").textContent=data.subtitle;
- const cover=document.getElementById("coverPreview");
- if(data.cover){cover.src=data.cover;cover.classList.remove("hidden")}
- else cover.classList.add("hidden");
- const music=document.getElementById("music");
- if(data.music){music.src=data.music;music.classList.remove("hidden")}
+ el("mainTitle").textContent=cover.titulo||"Un lugar para nosotros";
+ el("subtitle").textContent=cover.dedicatoria||"";
+
+ if(cover.foto_url){
+  el("coverPreview").src=cover.foto_url;
+  show("coverPreview");
+ }else hide("coverPreview");
+
+ if(cover.musica_url){
+  el("music").src=cover.musica_url;
+  show("music");
+ }else hide("music");
+
  renderGrid();
  updatePoints();
 }
 
 function renderGrid(){
- const grid=document.getElementById("letterGrid");
+ const grid=el("letterGrid");
  grid.innerHTML="";
- data.letters.forEach((letter,i)=>{
+
+ letters.forEach((l,i)=>{
+  const unlocked=!l.fecha_desbloqueo||new Date(l.fecha_desbloqueo)<=new Date();
   const div=document.createElement("div");
   div.className="day";
-  div.innerHTML=`♡<strong>Día ${i+1}</strong><small>${letter.text?"Carta preparada":"Próximamente"}</small>`;
-  div.onclick=()=>openLetter(i);
+
+  const title=document.createElement("strong");
+  title.textContent="Día "+(i+1);
+
+  const small=document.createElement("small");
+  small.textContent=unlocked
+   ?(l.contenido?"Carta preparada":"Próximamente")
+   :"Se desbloquea más adelante";
+
+  div.append("♡",title,small);
+  if(unlocked)div.onclick=()=>openLetter(i);
+  else div.style.opacity=".65";
+
   grid.appendChild(div);
  });
 }
 
 function openLetter(i){
- const l=data.letters[i];
- document.getElementById("readTitle").textContent=l.title||"Día "+(i+1);
- document.getElementById("readText").textContent=l.text||"Esta carta todavía no está lista. ♡";
- const photo=document.getElementById("readPhoto");
- if(l.photo){photo.src=l.photo;photo.classList.remove("hidden")}
- else photo.classList.add("hidden");
- document.getElementById("letters").classList.add("hidden");
- document.getElementById("readLetter").classList.remove("hidden");
- document.getElementById("readLetter").scrollIntoView();
+ const l=letters[i];
+ el("readTitle").textContent=l.titulo||"Día "+(i+1);
+ el("readText").textContent=l.contenido||"Esta carta todavía no está lista. ♡";
+
+ if(l.foto_url){
+  el("readPhoto").src=l.foto_url;
+  show("readPhoto");
+ }else hide("readPhoto");
+
+ hide("letters");
+ show("readLetter");
+ el("readLetter").scrollIntoView();
 }
 
 function closeLetter(){
- document.getElementById("readLetter").classList.add("hidden");
- document.getElementById("letters").classList.remove("hidden");
- document.getElementById("letters").scrollIntoView();
+ hide("readLetter");
+ show("letters");
+ el("letters").scrollIntoView();
 }
 
-function readFile(file,callback){
- if(!file)return;
- const reader=new FileReader();
- reader.onload=()=>callback(reader.result);
- reader.readAsDataURL(file);
-}
+function updatePoints(){
+ points=Math.min(100,Math.max(0,Number(points)||0));
+ el("score").textContent=points;
+ el("bar").style.width=points+"%";
 
-function saveCover(){
- data.title=document.getElementById("editTitle").value||data.title;
- data.subtitle=document.getElementById("editSubtitle").value||data.subtitle;
- const photo=document.getElementById("coverFile").files[0];
- const audio=document.getElementById("musicFile").files[0];
- let jobs=[];
- if(photo)jobs.push(new Promise(resolve=>readFile(photo,v=>{data.cover=v;resolve()})));
- if(audio)jobs.push(new Promise(resolve=>readFile(audio,v=>{data.music=v;resolve()})));
- Promise.all(jobs).then(()=>{
-  persist();render();alert("Portada guardada ♡");
- });
-}
-
-function saveLetter(){
- const i=Number(document.getElementById("daySelect").value);
- const l=data.letters[i];
- l.title=document.getElementById("editLetterTitle").value||"Carta del día "+(i+1);
- l.text=document.getElementById("editLetterText").value;
- const photo=document.getElementById("letterFile").files[0];
- if(photo){
-  readFile(photo,v=>{
-   l.photo=v;persist();render();
-   document.getElementById("savedMessage").textContent="¡Carta y fotografía guardadas! ♡";
-  });
+ if(points>=100){
+  show("finish");
+  hide("pointButton");
  }else{
-  persist();render();
-  document.getElementById("savedMessage").textContent="¡Carta guardada! ♡";
+  hide("finish");
+  show("pointButton");
+ }
+}
+
+async function addPoint(){
+ if(points>=100)return;
+
+ el("pointButton").disabled=true;
+ try{
+  const {data,error}=await db.rpc("sumar_punto");
+  if(error)throw error;
+
+  points=Number(data);
+  updatePoints();
+ }catch(e){
+  console.error(e);
+  alert("No pudimos sumar el punto. Revisa tu conexión e inténtalo otra vez.");
+ }finally{
+  el("pointButton").disabled=false;
+ }
+}
+
+async function uploadFile(file,prefix){
+ const ext=(file.name.split(".").pop()||"bin").replace(/[^a-z0-9]/gi,"");
+ const random=crypto.randomUUID?crypto.randomUUID():Math.random().toString(36).slice(2);
+ const path=prefix+"/"+Date.now()+"-"+random+"."+ext;
+
+ const {error}=await db.storage.from(BUCKET).upload(path,file,{
+  contentType:file.type||"application/octet-stream"
+ });
+
+ if(error)throw error;
+
+ const {data}=db.storage.from(BUCKET).getPublicUrl(path);
+ return data.publicUrl;
+}
+
+async function uploadDataUrl(value,prefix){
+ if(!value)return "";
+ if(!value.startsWith("data:"))return value;
+
+ const response=await fetch(value);
+ const blob=await response.blob();
+ const ext=blob.type.includes("png")?"png":
+  blob.type.includes("jpeg")?"jpg":
+  blob.type.includes("webp")?"webp":
+  blob.type.includes("mpeg")?"mp3":"bin";
+
+ const file=new File([blob],prefix+"."+ext,{type:blob.type});
+ return await uploadFile(file,prefix);
+}
+
+async function loginAdmin(){
+ message("loginMessage","Iniciando sesión...");
+
+ const email=el("email").value.trim();
+ const password=el("password").value;
+
+ if(!email||!password){
+  message("loginMessage","Escribe tu correo y contraseña.");
+  return;
+ }
+
+ const {data,error}=await db.auth.signInWithPassword({email,password});
+
+ if(error){
+  message("loginMessage","No se pudo iniciar sesión: "+error.message);
+  return;
+ }
+
+ if(data.user.id!==ADMIN_UID){
+  await db.auth.signOut();
+  message("loginMessage","Esta cuenta no tiene permiso de administrador.");
+  return;
+ }
+
+ isAdmin=true;
+ hide("login");
+ show("admin");
+
+ await loadData();
+ loadEditor();
+ el("editTitle").value=cover.titulo||"";
+ el("editSubtitle").value=cover.dedicatoria||"";
+}
+
+function showLogin(){
+ show("login");
+ el("login").scrollIntoView();
+}
+
+function hideLogin(){hide("login")}
+
+async function logoutAdmin(){
+ await db.auth.signOut();
+ isAdmin=false;
+ hide("admin");
+ hide("login");
+}
+
+async function checkSession(){
+ const {data}=await db.auth.getSession();
+
+ if(data.session&&data.session.user.id===ADMIN_UID){
+  isAdmin=true;
+  show("admin");
+  await loadData();
+  loadEditor();
+  el("editTitle").value=cover.titulo||"";
+  el("editSubtitle").value=cover.dedicatoria||"";
+ }
+}
+
+async function saveCover(){
+ if(!isAdmin)return;
+
+ try{
+  message("coverMessage","Guardando...");
+
+  let photo=cover.foto_url||"";
+  let music=cover.musica_url||"";
+
+  if(el("coverFile").files[0]){
+   photo=await uploadFile(el("coverFile").files[0],"portada");
+  }
+
+  if(el("musicFile").files[0]){
+   music=await uploadFile(el("musicFile").files[0],"musica");
+  }
+
+  const updated={
+   id:1,
+   titulo:el("editTitle").value,
+   dedicatoria:el("editSubtitle").value,
+   foto_url:photo,
+   musica_url:music
+  };
+
+  const {error}=await db.from("portada").upsert(updated);
+  if(error)throw error;
+
+  cover=updated;
+  render();
+  message("coverMessage","¡Portada guardada! ❤️");
+ }catch(e){
+  console.error(e);
+  message("coverMessage","Error al guardar: "+e.message);
  }
 }
 
 function loadEditor(){
- const i=Number(document.getElementById("daySelect").value);
- const l=data.letters[i];
- document.getElementById("editLetterTitle").value=l.title;
- document.getElementById("editLetterText").value=l.text;
- document.getElementById("letterFile").value="";
-}
-document.getElementById("daySelect").innerHTML=
- data.letters.map((l,i)=>`<option value="${i}">Día ${i+1}</option>`).join("");
-document.getElementById("daySelect").addEventListener("change",loadEditor);
+ const i=Number(el("daySelect").value||0);
+ const l=letters[i];
+ if(!l)return;
 
-function addPoint(){
- if(data.finished||data.points>=100)return;
- data.points++;
- if(data.points===100)data.finished=true;
- persist();updatePoints();
+ el("editLetterTitle").value=l.titulo||"";
+ el("editLetterText").value=l.contenido||"";
+ el("unlockDate").value=localDateValue(l.fecha_desbloqueo);
+ el("letterFile").value="";
 }
 
-function updatePoints(){
- document.getElementById("score").textContent=data.points;
- document.getElementById("bar").style.width=data.points+"%";
- if(data.finished){
-  document.getElementById("finish").classList.remove("hidden");
-  document.getElementById("pointButton").classList.add("hidden");
+async function saveLetter(){
+ if(!isAdmin)return;
+
+ try{
+  const i=Number(el("daySelect").value);
+  const old=letters[i];
+
+  message("savedMessage","Guardando carta...");
+
+  let photo=old.foto_url||"";
+  if(el("letterFile").files[0]){
+   photo=await uploadFile(el("letterFile").files[0],"cartas");
+  }
+
+  const dateValue=el("unlockDate").value;
+
+  const updated={
+   numero:i+1,
+   titulo:el("editLetterTitle").value||"Carta del día "+(i+1),
+   contenido:el("editLetterText").value,
+   foto_url:photo,
+   fecha_desbloqueo:dateValue?new Date(dateValue).toISOString():null
+  };
+
+  let {data,error}=await db.from("cartas")
+   .update(updated).eq("numero",i+1).select();
+
+  if(error)throw error;
+
+  if(!data||!data.length){
+   const result=await db.from("cartas").insert(updated);
+   if(result.error)throw result.error;
+  }
+
+  letters[i]=updated;
+  renderGrid();
+  message("savedMessage","¡Carta guardada correctamente! ❤️");
+ }catch(e){
+  console.error(e);
+  message("savedMessage","Error al guardar: "+e.message);
+ }
+}
+
+el("daySelect").innerHTML=letters.map((l,i)=>
+ `<option value="${i}">Día ${i+1}</option>`
+).join("");
+
+el("daySelect").addEventListener("change",loadEditor);
+
+async function importBackup(){
+ if(!isAdmin){
+  message("importMessage","Primero inicia sesión.");
+  return;
+ }
+
+ const file=el("backupFile").files[0];
+
+ if(!file){
+  message("importMessage","Primero selecciona respaldo-regina.json.");
+  return;
+ }
+
+ try{
+  message("importMessage","Leyendo respaldo...");
+
+  const old=JSON.parse(await file.text());
+
+  if(!old.letters||!Array.isArray(old.letters)){
+   throw new Error("El archivo no tiene el formato esperado.");
+  }
+
+  const photo=await uploadDataUrl(old.cover||"","portada-importada");
+  const music=await uploadDataUrl(old.music||"","musica-importada");
+
+  const newCover={
+   id:1,
+   titulo:old.title||"Un lugar para nosotros",
+   dedicatoria:old.subtitle||"",
+   foto_url:photo,
+   musica_url:music
+  };
+
+  const {error:coverError}=await db.from("portada").upsert(newCover);
+  if(coverError)throw coverError;
+  cover=newCover;
+
+  const count=Math.min(old.letters.length,30);
+
+  for(let i=0;i<count;i++){
+   const item=old.letters[i]||{};
+   const oldPhoto=await uploadDataUrl(item.photo||"","carta-"+(i+1));
+
+   const row={
+    numero:i+1,
+    titulo:item.title||"Carta del día "+(i+1),
+    contenido:item.text||"",
+    foto_url:oldPhoto,
+    fecha_desbloqueo:null
+   };
+
+   const {data,error}=await db.from("cartas")
+    .update(row).eq("numero",i+1).select();
+
+   if(error)throw error;
+
+   if(!data||!data.length){
+    const result=await db.from("cartas").insert(row);
+    if(result.error)throw result.error;
+   }
+
+   letters[i]=row;
+   message("importMessage","Importando carta "+(i+1)+" de "+count+"...");
+  }
+
+  const total=Math.min(100,Math.max(0,Number(old.points)||0));
+
+  const {error:pointsError}=await db.from("puntos")
+   .update({total:total,actualizado:new Date().toISOString()})
+   .eq("id",1);
+
+  if(pointsError)throw pointsError;
+
+  points=total;
+  render();
+
+  message("importMessage","¡Importación terminada! Tus recuerdos ya están en la nube. ❤️");
+
+ }catch(e){
+  console.error(e);
+  message("importMessage","No se terminó la importación: "+e.message+". Puedes volver a intentarlo.");
  }
 }
 
 function playMusic(){
- const music=document.getElementById("music");
- if(!music.src){alert("Todavía no hay una canción configurada ♡");return}
- music.classList.remove("hidden");
- music.play();
+ const music=el("music");
+
+ if(!music.src){
+  alert("Todavía no hay una canción configurada. ♡");
+  return;
+ }
+
+ music.play().catch(()=>alert("Pulsa el botón de reproducción de la canción."));
 }
 
-document.getElementById("editTitle").value=data.title;
-document.getElementById("editSubtitle").value=data.subtitle;
-loadEditor();
-render();const backupButton = document.createElement("button");
-backupButton.textContent = "Descargar respaldo de mis recuerdos ❤️";
-backupButton.style.display = "block";
-backupButton.style.margin = "20px auto";
+async function start(){
+ el("daySelect").value="0";
+ await loadData();
+ await checkSession();
+}
 
-backupButton.onclick = () => {
-  const saved = localStorage.getItem("regalo_web_v1");
-  if (!saved) {
-    alert("No encontramos los recuerdos guardados.");
-    return;
-  }
-
-  const blob = new Blob([saved], {type: "application/json"});
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = "respaldo-regina.json";
-  link.click();
-  URL.revokeObjectURL(url);
-  alert("¡Respaldo descargado! ❤️");
-};
-
-document.getElementById("admin").appendChild(backupButton);
+start();
 </script>
 </body>
 </html>
